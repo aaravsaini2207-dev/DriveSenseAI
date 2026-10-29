@@ -1,0 +1,57 @@
+# Python
+
+**pycache**/
+*.py[cod]
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets and local configuration
+
+.env
+.env.*
+!.env.example
+
+# Editors and operating system
+
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Model weights
+
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Input videos and datasets
+
+data/videos/
+data/raw/
+data/evaluation/frames/
+data/evaluation/annotations/
+
+# Generated videos
+
+data/outputs/*.mp4
+
+# Generated evaluation artifacts
+
+data/outputs/metrics/
+data/outputs/benchmark_results.json
+data/outputs/depth_map.png
+data/outputs/object_depth_map.png
+data/outputs/object_depth_test.jpg
+data/outputs/depth_timeline.csv
+
+# External dependency repository and downloaded assets
+
+external/Depth-Anything-V2/
+external/**/checkpoints/
+external/**/dataset/
+external/**/assets/
