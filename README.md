@@ -2,58 +2,56 @@
 
 ### An End-to-End Computer Vision Pipeline for Road Scene Understanding
 
-DriveSense AI is a computer vision project that combines object detection, multi-object tracking, lane detection, motion analysis, and monocular depth estimation to analyze road scenes from video.
+DriveSense AI is a modular computer vision pipeline that analyzes road-scene videos using object detection, multi-object tracking, lane detection, motion analysis, and monocular depth estimation.
 
-The project processes road footage through a modular pipeline and generates annotated video output alongside performance and evaluation reports.
+It combines YOLO11n, ByteTrack, and Depth Anything V2 Small to process road footage and generate annotated video output alongside performance and evaluation reports.
 
-## ✨ Features
+## Features
 
-* **Object Detection:** Detects road-scene objects using YOLO11n.
-* **Multi-Object Tracking:** Maintains object track IDs across video frames using ByteTrack.
+* **Object Detection:** Detects objects using YOLO11n.
+* **Multi-Object Tracking:** Tracks detected objects across video frames using ByteTrack.
 * **Lane Detection:** Identifies visible lane markings.
-* **Motion Analysis:** Estimates motion-related information from consecutive frames.
-* **Monocular Depth Estimation:** Uses Depth Anything V2 Small to estimate relative scene depth.
+* **Motion Analysis:** Estimates image-plane motion from consecutive frames.
+* **Monocular Depth Estimation:** Generates relative depth maps using Depth Anything V2 Small.
 * **Object-Level Depth:** Aggregates depth-map values within tracked object bounding boxes.
-* **Performance Profiling:** Measures processing time and latency across pipeline stages.
-* **Evaluation Tools:** Includes scripts for benchmarking, annotation inspection, tracking analysis, and depth-consistency analysis.
+* **Performance Profiling:** Measures processing time across pipeline stages.
+* **Evaluation Tools:** Provides scripts for benchmarking, tracking diagnostics, depth-consistency analysis, and annotation inspection.
+* **Automated Tests:** Includes unit tests for video utilities and object-level depth estimation.
 
-## 🏗️ Architecture
+## Architecture
 
 ```text
-                Input Road Video
-                       |
-                       v
-                Video Processing
-                       |
-                       v
-                 Frame Resizing
-                       |
-          +------------+------------+
-          |            |            |
-          v            v            v
-    Object Detection  Lane        Motion
-          |          Detection    Analysis
-          v
-    ByteTrack Tracking
-          |
-          v
-    Tracked Objects
-          |
-          +----------------------+
-          |                      |
-          v                      v
-    Depth Estimation      Object-Level Depth
-          |                      ^
-          v                      |
-    Relative Depth Map -----------+
-          |
-          v
-    Profiling and Video Output
+Input Road Video
+       |
+       v
+Video Processing and Resizing
+       |
+       +-----------------------------+
+       |              |              |
+       v              v              v
+Object Detection   Lane Detection   Motion Analysis
+       |
+       v
+ByteTrack Tracking
+       |
+       v
+Tracked Objects
+       |
+       +---------------------------+
+       |                           |
+       v                           v
+Depth Estimation             Object-Level Depth
+       |                           ^
+       v                           |
+Relative Depth Map ---------------+
+       |
+       v
+Profiling and Annotated Video Output
 ```
 
-*Conceptual overview; the implementation and execution order are defined by the pipeline code.*
+*Conceptual overview; actual execution order is defined by the pipeline implementation.*
 
-## 🧰 Tech Stack
+## Tech Stack
 
 | Component                  | Technology                             |
 | -------------------------- | -------------------------------------- |
@@ -63,9 +61,10 @@ The project processes road footage through a modular pipeline and generates anno
 | Monocular depth estimation | Depth Anything V2 Small                |
 | Computer vision            | OpenCV                                 |
 | Deep learning              | PyTorch                                |
+| Testing                    | pytest                                 |
 | Evaluation                 | Custom Python scripts and JSON metrics |
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 DriveSenseAI/
@@ -81,38 +80,171 @@ DriveSenseAI/
 │       ├── tracker.py
 │       └── video.py
 ├── evaluation/
-│   ├── auto_annotate.py
 │   ├── benchmark.py
 │   ├── evaluate_depth.py
 │   ├── evaluate_tracking.py
 │   ├── extract_frames.py
 │   ├── create_contact_sheet.py
+│   ├── auto_annotate.py
 │   ├── summarize_annotations.py
 │   └── generate_report.py
+├── tests/
+│   ├── test_video.py
+│   └── test_object_depth.py
 ├── data/
-│   ├── videos/
 │   └── outputs/
-│       ├── metrics/
-│       ├── benchmark_output.mp4
 │       └── EVALUATION_REPORT.md
 ├── run_pipeline.py
+├── requirements.txt
 └── README.md
 ```
 
-## 📊 Performance and Evaluation
+## Requirements
 
-The pipeline was tested on a road video with the following characteristics:
+* Python 3.12 recommended
+* Git
+* Internet access for installing dependencies and obtaining model files
+* A CPU capable of running PyTorch inference
+
+A GPU is not required, but CPU inference may be slow.
+
+## Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/aaravsaini2207-dev/DriveSenseAI.git
+cd DriveSenseAI
+```
+
+### 2. Create and activate a virtual environment
+
+On Windows PowerShell:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+If PowerShell blocks environment activation, consult the Python documentation for platform-specific virtual environment instructions.
+
+### 3. Install dependencies
+
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+For a CPU-only PyTorch installation, use the installation command recommended by the official PyTorch installation selector if the default dependency installation does not provide a suitable CPU build.
+
+### 4. Obtain the Depth Anything V2 source code
+
+The Depth Anything V2 repository and checkpoint are not included in this Git repository.
+
+Clone the upstream project into the expected directory:
+
+```powershell
+git clone https://github.com/DepthAnything/Depth-Anything-V2.git external/Depth-Anything-V2
+```
+
+### 5. Obtain the depth checkpoint
+
+Download the official **Depth Anything V2 Small** checkpoint from the upstream project's documented checkpoint source.
+
+Place the checkpoint at:
+
+```text
+external/Depth-Anything-V2/checkpoints/depth_anything_v2_vits.pth
+```
+
+The checkpoint is a large model file and is intentionally excluded from this repository.
+
+Refer to the official [Depth Anything V2 repository](https://github.com/DepthAnything/Depth-Anything-V2) for model details and checkpoint availability.
+
+### 6. Provide a YOLO model and input video
+
+The pipeline uses the YOLO11n model file:
+
+```text
+yolo11n.pt
+```
+
+Ensure the model is available at the path expected by your project configuration. Ultralytics may download supported pretrained weights automatically when the configured model name is used and network access is available.
+
+Place your input road video at the path configured in the project. The development video is not included in the repository.
+
+### 7. Configure Python imports
+
+From the project root in PowerShell:
+
+```powershell
+$env:PYTHONPATH = "."
+```
+
+### 8. Run the pipeline
+
+```powershell
+python -u run_pipeline.py
+```
+
+The current pipeline writes its processed video to:
+
+```text
+data/outputs/drivesense_output.mp4
+```
+
+The input video, YOLO weights, and Depth Anything V2 checkpoint must be available at the locations expected by the code.
+
+## Testing
+
+Run the automated tests:
+
+```powershell
+python -m pytest -q
+```
+
+The current test suite contains 13 tests covering video utilities and object-level depth estimation.
+
+## Benchmarking and Evaluation
+
+Run the pipeline benchmark:
+
+```powershell
+python -u -m evaluation.benchmark --depth-interval 15
+```
+
+Evaluate tracking diagnostics:
+
+```powershell
+python -u -m evaluation.evaluate_tracking
+```
+
+Evaluate depth consistency:
+
+```powershell
+python -u -m evaluation.evaluate_depth
+```
+
+Generate the evaluation report:
+
+```powershell
+python -u -m evaluation.generate_report
+```
+
+Evaluation artifacts are written under `data/outputs/` and `data/outputs/metrics/`.
+
+## Performance and Evaluation Results
+
+The following results were recorded during development on a road video with these characteristics:
 
 * **Input resolution:** 3840 × 2160
 * **Source frame rate:** 29.97 FPS
 * **Frames processed:** 338
-* **Latest recorded benchmark processing time:** 69.67 seconds
-* **Latest recorded processing throughput:** 4.85 FPS
+* **Recorded processing time:** 69.67 seconds
+* **Recorded throughput:** 4.85 FPS
 * **Depth inference calls:** 23, using a 15-frame refresh interval
 
 ### Tracking diagnostics
-
-The separate tracking evaluation recorded:
 
 | Metric                            |          Result |
 | --------------------------------- | --------------: |
@@ -123,11 +255,9 @@ The separate tracking evaluation recorded:
 | Longest track                     | 64 observations |
 | Track IDs with gaps               |              53 |
 
-These are tracker-output statistics, not ground-truth tracking accuracy measurements.
+These are statistics from tracker output, not measurements of ground-truth tracking accuracy.
 
 ### Depth-consistency diagnostics
-
-The separate depth evaluation recorded:
 
 | Metric                                   | Result |
 | ---------------------------------------- | -----: |
@@ -138,115 +268,32 @@ The separate depth evaluation recorded:
 | Mean absolute consecutive depth change   | 0.0586 |
 | Mean normalized consecutive depth change | 0.1060 |
 
-The depth evaluation used a 10-frame refresh interval, unlike the latest benchmark's 15-frame interval. The results therefore represent separate configurations.
+The depth-consistency evaluation used a 10-frame refresh interval, whereas the benchmark above used a 15-frame interval. These results therefore come from different configurations.
 
-These depth-change values measure consistency between consecutive observations. They do not measure depth accuracy or physical distance in metres.
+Depth-change values describe consistency between observations. They do not establish depth accuracy or physical distance in metres.
 
-For detailed results, see [`data/outputs/EVALUATION_REPORT.md`](data/outputs/EVALUATION_REPORT.md).
+For additional details, see [the evaluation report](data/outputs/EVALUATION_REPORT.md).
 
-## ⚙️ Setup
+## Limitations
 
-### 1. Clone the repository
-
-```bash
-git clone <https://github.com/aaravsaini2207-dev>
-cd DriveSenseAI
-```
-
-### 2. Create a virtual environment
-
-Python 3.12 was used in the development environment.
-
-```bash
-python -m venv .venv
-```
-
-Activate it on Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-### 3. Install dependencies
-
-Install the dependencies listed in the project's `requirements.txt`.
-
-```bash
-pip install -r requirements.txt
-```
-
-The repository also requires the appropriate model weights and Depth Anything V2 checkpoint. Follow the project's setup instructions for obtaining these files.
-
-### 4. Configure Python imports
-
-From the project root, run:
-
-```powershell
-$env:PYTHONPATH = "."
-```
-
-### 5. Run the pipeline
-
-```bash
-python -u run_pipeline.py
-```
-
-The pipeline writes its processed video to:
-
-```text
-data/outputs/drivesense_output.mp4
-```
-
-Ensure the input video and required model checkpoints are available before running.
-
-## 🧪 Evaluation
-
-Run the benchmark:
-
-```bash
-python -u -m evaluation.benchmark --depth-interval 15
-```
-
-Evaluate tracking:
-
-```bash
-python -u -m evaluation.evaluate_tracking
-```
-
-Evaluate depth consistency:
-
-```bash
-python -u -m evaluation.evaluate_depth
-```
-
-Generate the evaluation report:
-
-```bash
-python -u -m evaluation.generate_report
-```
-
-Evaluation outputs are stored in `data/outputs/` and `data/outputs/metrics/`.
-
-## ⚠️ Limitations
-
-* Processing speed is below real-time video frame rates in the current tested configuration.
-* Monocular depth outputs are relative estimates, not calibrated distances in metres.
+* Processing throughput in the recorded configuration is below real-time video frame rates.
+* Monocular depth outputs are relative estimates, not calibrated physical distances.
 * Detection and tracking accuracy have not been established using comprehensive ground-truth annotations.
-* Tracking gaps can result from occlusion, missed detections, objects leaving the frame, or ID fragmentation.
+* Tracking gaps may result from occlusion, missed detections, objects leaving the frame, or identity fragmentation.
 * Performance depends on hardware, system load, model settings, and inference configuration.
 * This project is a road-scene analysis prototype, not a validated autonomous-driving or vehicle-safety system.
 
-## 🔭 Future Improvements
+## Future Improvements
 
-* Evaluate detection performance against manually annotated ground-truth boxes.
+* Evaluate object detection against manually annotated ground-truth boxes.
 * Measure tracking quality using ground-truth trajectories.
 * Validate depth estimates against suitable depth ground truth.
 * Improve inference throughput and investigate pipeline bottlenecks.
 * Test lane detection across different road layouts and lighting conditions.
-* Add reproducible benchmark comparisons across configurations.
-* Expand visual documentation with annotated sample frames and output videos.
+* Compare configurations using reproducible benchmarks.
+* Add representative annotated frames and output-video demonstrations.
 
-## 👤 Author
+## Author
 
 **Aarav Saini**
 
